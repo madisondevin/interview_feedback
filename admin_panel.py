@@ -6,12 +6,9 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-from configuration import criteria, ADMIN_USERS, credentials, RATING_OPTIONS
+from configuration import criteria, ADMIN_USERS, credentials, RATING_OPTIONS, candidates
 from ui_feedback import format_timestamp
 from feedback_storage import get_feedback_status
-
-# Standardize candidate IDs as strings (should be imported or passed in real use)
-candidates = {"1": "Fred Smith", "2": "Jane Doe"}
 
 
 def calculate_criteria_avg_rating(

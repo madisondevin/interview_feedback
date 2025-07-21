@@ -54,7 +54,9 @@ You have been invited to participate in the interview feedback process. Please f
 
 1. Open your web browser and go to https://interviewfeedback-iveggdcdruheskfdyzdtg9.streamlit.app/
 2. Log in using your assigned username and password.
-3. Select each candidate and submit your feedback. You must submit your feedback before viewing others' responses.
+3. Select each candidate and submit your feedback. After your submit your response for a candidate, you can view others' responses.
+
+Please note that it may take a moment for the submit button to load, and it may take a moment for the data to process. If someone is running or biking in the top right icon and the page is loading, hang tight.
 
 If you have any issues accessing the app, please contact the administrator.
 

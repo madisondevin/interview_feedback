@@ -52,7 +52,7 @@ Dear Panelist,
 
 You have been invited to participate in the interview feedback process. Please follow the instructions below to access the feedback app:
 
-1. Open your web browser and go to http://yourserver.com:8501
+1. Open your web browser and go to https://interviewfeedback-iveggdcdruheskfdyzdtg9.streamlit.app/
 2. Log in using your assigned username and password.
 3. Select each candidate and submit your feedback. You must submit your feedback before viewing others' responses.
 

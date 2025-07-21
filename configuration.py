@@ -22,7 +22,7 @@ RATING_OPTIONS = [
 ]
 
 # --- CONFIGURATION ---
-candidates = {"1": "Fred Smith", "2": "Jane Doe"}
+candidates = {"1": "Anne", "2": "Maria Paula", "3": "Anastasia"}
 criteria = {
     "User research": [
         "Design and conduct mixed method studies, analyze complex data, synthesize findings, and translate insights into actionable recommendations/products for your role.",

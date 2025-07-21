@@ -1,0 +1,13 @@
+
+# Core app dependencies
+streamlit
+gspread
+google-auth
+google-auth-oauthlib
+oauthlib
+pandas
+openpyxl
+pyyaml
+bcrypt
+extra-streamlit-components
+streamlit-authenticator==0.2.2

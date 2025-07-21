@@ -1,0 +1,10 @@
+# Ignore Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore secrets.toml file in .streamlit
+# This file contains sensitive information and should not be committed to version control
+.streamlit/
+*secrets*

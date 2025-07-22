@@ -48,19 +48,22 @@ def get_gsheet(max_retries=5, delay=2):
             worksheet = sh.worksheet(WORKSHEET_NAME)
             return worksheet
         except APIError as e:
-            if (
-                hasattr(e, "response")
-                and getattr(e.response, "status_code", None) == 503
-            ):
+            # Exponential backoff for 500/503 errors
+            if hasattr(e, "response") and getattr(e.response, "status_code", None) in [
+                500,
+                503,
+            ]:
                 if attempt < max_retries - 1:
-                    time.sleep(delay)
+                    time.sleep(delay * (2**attempt))
                     continue
             raise
 
 
 def load_feedback():
+    # Only load from Google Sheets if not already cached in session_state
+    if "_cached_feedback" in st.session_state:
+        return st.session_state["_cached_feedback"]
     worksheet = get_gsheet()
-    # Define the expected headers for the worksheet
     expected_headers = [
         "Interviewer",
         "Candidate_ID",
@@ -70,7 +73,6 @@ def load_feedback():
         "Overall_Notes",
         "Timestamp",
     ]
-    # Add all possible criteria headers (for compatibility, but will be handled dynamically below)
     records = worksheet.get_all_records(expected_headers=expected_headers)
     feedback = {}
     for row in records:
@@ -80,7 +82,6 @@ def load_feedback():
             continue
         if user not in feedback:
             feedback[user] = {}
-        # Extract criteria ratings and notes dynamically
         criteria_ratings = {}
         criteria_notes = {}
         for key, value in row.items():
@@ -90,7 +91,6 @@ def load_feedback():
             elif key.startswith("CriteriaNotes_"):
                 crit = key.replace("CriteriaNotes_", "")
                 criteria_notes[crit] = value
-        # Ensure 'submitted' is a real boolean (not string)
         submitted_val = row.get("Submitted", False)
         if isinstance(submitted_val, str):
             submitted = submitted_val.lower() == "true"
@@ -105,6 +105,7 @@ def load_feedback():
             "criteria_ratings": criteria_ratings,
             "criteria_notes": criteria_notes,
         }
+    st.session_state["_cached_feedback"] = feedback
     return feedback
 
 
@@ -113,12 +114,11 @@ def save_feedback(feedback, user=None, candidate_id=None, criteria_list=None):
     Save or update feedback for a single user/candidate pair, including all criteria ratings/notes.
     criteria_list: list of criteria names (strings) to save ratings/notes for.
     """
-    worksheet = get_gsheet()
+    # Always write feedback to Google Sheets, even if not submitted
     if user is None or candidate_id is None or criteria_list is None:
         return
-
     fb = feedback.get(user, {}).get(candidate_id, {})
-    # Prepare row and headers
+    worksheet = get_gsheet()
     headers = [
         "Interviewer",
         "Candidate_ID",
@@ -128,6 +128,10 @@ def save_feedback(feedback, user=None, candidate_id=None, criteria_list=None):
         "Overall_Notes",
         "Timestamp",
     ]
+    for crit in criteria_list:
+        headers.append(f"CriteriaRating_{crit}")
+    for crit in criteria_list:
+        headers.append(f"CriteriaNotes_{crit}")
     row = [
         user,
         candidate_id,
@@ -137,21 +141,16 @@ def save_feedback(feedback, user=None, candidate_id=None, criteria_list=None):
         fb.get("overall_notes", ""),
         fb.get("timestamp", ""),
     ]
-    # Add criteria ratings and notes
     for crit in criteria_list:
-        headers.append(f"CriteriaRating_{crit}")
         row.append(fb.get("criteria_ratings", {}).get(crit, ""))
     for crit in criteria_list:
-        headers.append(f"CriteriaNotes_{crit}")
         row.append(fb.get("criteria_notes", {}).get(crit, ""))
-
     # Ensure header row is present and correct at the top (row 1)
     sheet_values = worksheet.get_all_values()
     if not sheet_values:
         worksheet.insert_row(headers, 1)
     elif sheet_values[0] != headers:
         worksheet.update(f"A1:{chr(65+len(headers)-1)}1", [headers])
-
     # Find if this user/candidate_id already exists in the sheet
     records = worksheet.get_all_records(expected_headers=headers)
     found = False
@@ -164,3 +163,5 @@ def save_feedback(feedback, user=None, candidate_id=None, criteria_list=None):
             break
     if not found:
         worksheet.append_row(row)
+    # Update cache
+    st.session_state["_cached_feedback"] = feedback

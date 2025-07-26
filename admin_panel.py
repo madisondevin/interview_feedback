@@ -22,6 +22,76 @@ def calculate_criteria_avg_rating(
     return round(sum(vals) / len(vals), 2) if vals else ""
 
 
+def export_feedback_to_excel(feedback_df, criteria_list, rating_options):
+    """
+    Export the feedback DataFrame to Excel with candidate and interviewer summaries.
+    Returns the Excel file as bytes.
+    """
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        feedback_df_sorted = feedback_df.sort_values(
+            ["Candidate_Name", "Interviewer"], ascending=[True, True]
+        )
+        # Only write the DataFrame, which will write a single header row
+        feedback_df_sorted.to_excel(writer, sheet_name="All_Feedback", index=False)
+        # Candidate summary
+        if not feedback_df.empty:
+            candidate_summary = []
+            for cname in feedback_df["Candidate_Name"].unique():
+                cdf = feedback_df[feedback_df["Candidate_Name"] == cname]
+                row = {
+                    "Candidate_Name": cname,
+                    "Count_Submitted_Reviews": len(cdf),
+                }
+                for r in rating_options[1:]:
+                    row[f"Overall_Count_{r}"] = (cdf["Overall_Rating"] == r).sum()
+                row["Overall_Notes"] = "; ".join(
+                    [str(x) for x in cdf["Overall_Notes"] if x]
+                )
+                # Ensure numeric for mean calculation
+                avg_col = pd.to_numeric(cdf["Criteria_Avg_Rating"], errors="coerce")
+                row["Avg_Of_Interviewer_Avg"] = (
+                    round(avg_col.mean(), 2) if not cdf.empty else ""
+                )
+                for crit in criteria_list:
+                    for r in rating_options[1:]:
+                        row[f"{crit}_Count_{r}"] = (cdf[f"{crit}_Rating"] == r).sum()
+                candidate_summary.append(row)
+            candidate_summary_df = pd.DataFrame(candidate_summary)
+            candidate_summary_df.to_excel(
+                writer, sheet_name="Candidate_Summary", index=False
+            )
+            interviewer_summary = []
+            for interviewer in feedback_df["Interviewer"].unique():
+                idf = feedback_df[feedback_df["Interviewer"] == interviewer]
+                submitted_count = len(idf)
+
+                def is_in_progress(row):
+                    feedback_entry = (
+                        st.session_state["feedback"]
+                        .get(row["Interviewer"], {})
+                        .get(str(row["Candidate_ID"]), {})
+                    )
+                    return get_feedback_status(feedback_entry) == "in_progress"
+
+                started_count = idf.apply(is_in_progress, axis=1).sum()
+                row = {
+                    "Interviewer": interviewer,
+                    "Count_Submitted_Reviews": submitted_count,
+                    "Count_Started_Reviews": started_count,
+                }
+                for r in rating_options[1:]:
+                    row[f"Count_Overall_Rating_{r}"] = (
+                        idf["Overall_Rating"] == r
+                    ).sum()
+                interviewer_summary.append(row)
+            interviewer_summary_df = pd.DataFrame(interviewer_summary)
+            interviewer_summary_df.to_excel(
+                writer, sheet_name="Interviewer_Summary", index=False
+            )
+    return output.getvalue()
+
+
 def show_admin_dashboard():
     """
     Display the admin dashboard, including the feedback completion matrix and all feedback details.
@@ -63,6 +133,8 @@ def show_admin_dashboard():
     rating_map = {r: i for i, r in enumerate(RATING_OPTIONS[1:])}
     for panelist, user_feedback in st.session_state["feedback"].items():
         for candidate_id_str, feedback in user_feedback.items():
+            if not feedback.get("submitted", False):
+                continue  # Only include submitted feedback
             candidate_name = candidates.get(
                 candidate_id_str, f"Unknown_{candidate_id_str}"
             )
@@ -112,106 +184,13 @@ def show_admin_dashboard():
                 feedback_df = feedback_df[new_order]
         st.dataframe(feedback_df, use_container_width=True)
         st.subheader("📤 Export to Excel", anchor=None)
+        st.caption(
+            "The Excel file will contain three sheets: (1) All submitted feedback, (2) summary by candidate with numeric averages, and (3) summary by interviewer."
+        )
         try:
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                feedback_df_sorted = feedback_df.sort_values(
-                    ["Candidate_Name", "Interviewer"], ascending=[True, True]
-                )
-                # Only write the DataFrame, which will write a single header row
-                feedback_df_sorted.to_excel(
-                    writer, sheet_name="All_Feedback", index=False
-                )
-                # Candidate summary
-                if not feedback_df.empty:
-                    if "Submitted" not in feedback_df.columns:
-                        submitted_flags = []
-                        for _, row in feedback_df.iterrows():
-                            panelist = row["Interviewer"]
-                            candidate_id = row["Candidate_ID"]
-                            feedback_entry = (
-                                st.session_state["feedback"]
-                                .get(panelist, {})
-                                .get(str(candidate_id), {})
-                            )
-                            submitted_flags.append(
-                                feedback_entry.get("submitted", False)
-                            )
-                        feedback_df["Submitted"] = submitted_flags
-                    submitted = feedback_df[feedback_df["Submitted"] == True]
-                    candidate_summary = []
-                    for cname in feedback_df["Candidate_Name"].unique():
-                        cdf = submitted[submitted["Candidate_Name"] == cname]
-                        row = {
-                            "Candidate_Name": cname,
-                            "Count_Submitted_Reviews": len(cdf),
-                        }
-                        for r in RATING_OPTIONS[1:]:
-                            row[f"Overall_Count_{r}"] = (
-                                cdf["Overall_Rating"] == r
-                            ).sum()
-                        row["Overall_Notes"] = "; ".join(
-                            [str(x) for x in cdf["Overall_Notes"] if x]
-                        )
-                        row["Avg_Of_Interviewer_Avg"] = (
-                            round(cdf["Criteria_Avg_Rating"].mean(), 2)
-                            if not cdf.empty
-                            else ""
-                        )
-                        for crit in criteria_list:
-                            for r in RATING_OPTIONS[1:]:
-                                row[f"{crit}_Count_{r}"] = (
-                                    cdf[f"{crit}_Rating"] == r
-                                ).sum()
-                        candidate_summary.append(row)
-                    candidate_summary_df = pd.DataFrame(candidate_summary)
-                    candidate_summary_df.to_excel(
-                        writer, sheet_name="Candidate_Summary", index=False
-                    )
-                    interviewer_summary = []
-                    for interviewer in feedback_df["Interviewer"].unique():
-                        idf = feedback_df[feedback_df["Interviewer"] == interviewer]
-                        if "Submitted" not in idf.columns:
-                            submitted_flags = []
-                            for _, row in idf.iterrows():
-                                panelist = row["Interviewer"]
-                                candidate_id = row["Candidate_ID"]
-                                feedback_entry = (
-                                    st.session_state["feedback"]
-                                    .get(panelist, {})
-                                    .get(str(candidate_id), {})
-                                )
-                                submitted_flags.append(
-                                    feedback_entry.get("submitted", False)
-                                )
-                            idf = idf.copy()
-                            idf["Submitted"] = submitted_flags
-                        submitted_count = (idf["Submitted"] == True).sum()
-
-                        def is_in_progress(row):
-                            feedback_entry = (
-                                st.session_state["feedback"]
-                                .get(row["Interviewer"], {})
-                                .get(str(row["Candidate_ID"]), {})
-                            )
-                            return get_feedback_status(feedback_entry) == "in_progress"
-
-                        started_count = idf.apply(is_in_progress, axis=1).sum()
-                        row = {
-                            "Interviewer": interviewer,
-                            "Count_Submitted_Reviews": submitted_count,
-                            "Count_Started_Reviews": started_count,
-                        }
-                        for r in RATING_OPTIONS[1:]:
-                            row[f"Count_Overall_Rating_{r}"] = (
-                                idf["Overall_Rating"] == r
-                            ).sum()
-                        interviewer_summary.append(row)
-                    interviewer_summary_df = pd.DataFrame(interviewer_summary)
-                    interviewer_summary_df.to_excel(
-                        writer, sheet_name="Interviewer_Summary", index=False
-                    )
-            excel_data = output.getvalue()
+            excel_data = export_feedback_to_excel(
+                feedback_df, criteria_list, RATING_OPTIONS
+            )
             st.download_button(
                 label="📋 Download as Excel",
                 data=excel_data,

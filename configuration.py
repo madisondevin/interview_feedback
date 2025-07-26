@@ -22,12 +22,12 @@ RATING_OPTIONS = [
 ]
 
 # --- CONFIGURATION ---
-candidates = {"1": "Anne", "2": "Maria Paula", "3": "Anastasia"}
+candidates = {"1": "Anne", "2": "Maria-Paula", "3": "Anastasia"}
 criteria = {
     "User research": [
         "Design and conduct mixed method studies, analyze complex data, synthesize findings, and translate insights into actionable recommendations/products for your role.",
-        "Expertise should include multiple methods for both quantitative and qualitative research approaches.",
-        "Data analytics should be strong for both qualitative and quantitative methods (not manual processes like spreadsheets and all manual coding; inter-rater reliability, etc.)",
+        "Expertise includes multiple methods for both quantitative and qualitative research approaches.",
+        "Data analytics is strong for both qualitative and quantitative methods (Python, R, Qualtrics StatsIQ, etc.)",
         "Working with product/UX designers to create actionable research plans.",
     ],
     "Research ops": [
@@ -40,8 +40,8 @@ criteria = {
         "For example, how well can you understand their answer (if presented as non-technical)?",
     ],
     "ECE knowledge & empathy": [
+        "This is important because this position includes lots of engagement and interaction with Frog Street customers.",
         "Ability to empathize and build rapport with early childhood educators and administrators.",
-        "This position includes lots of engagement and interaction with Frog Street customers.",
         "Baseline ECE knowledge (such as awareness of trends, key issues, challenges, opportunities).",
     ],
     "Leadership & professional maturity": [

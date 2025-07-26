@@ -187,6 +187,11 @@ def show_admin_dashboard():
             else:
                 new_order += [c for c in cols if c not in new_order]
                 feedback_df = feedback_df[new_order]
+        # Ensure Criteria_Avg_Rating is numeric for display as well
+        if "Criteria_Avg_Rating" in feedback_df.columns:
+            feedback_df["Criteria_Avg_Rating"] = pd.to_numeric(
+                feedback_df["Criteria_Avg_Rating"], errors="coerce"
+            )
         st.dataframe(feedback_df, use_container_width=True)
         st.subheader("📤 Export to Excel", anchor=None)
         st.caption(

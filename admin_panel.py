@@ -27,6 +27,11 @@ def export_feedback_to_excel(feedback_df, criteria_list, rating_options):
     Export the feedback DataFrame to Excel with candidate and interviewer summaries.
     Returns the Excel file as bytes.
     """
+    # Ensure Criteria_Avg_Rating is numeric for the whole DataFrame
+    if "Criteria_Avg_Rating" in feedback_df.columns:
+        feedback_df["Criteria_Avg_Rating"] = pd.to_numeric(
+            feedback_df["Criteria_Avg_Rating"], errors="coerce"
+        )
     output = BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         feedback_df_sorted = feedback_df.sort_values(

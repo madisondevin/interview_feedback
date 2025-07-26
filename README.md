@@ -50,7 +50,13 @@ When you are ready for panelists to use the app, share the following message wit
 
 Dear Panelist,
 
-You have been invited to participate in the interview feedback process. Please follow the instructions below to access the feedback app:
+You have been invited to participate in the interview feedback process. 
+The goal is to minize bias through a process that lets you:
+* Provide feedback based on explicit criteria
+* Submit your input before viewing others' feedback on a candidate or discussing others' impressions of the candidate
+* Gain access to others’ responses after submitting your own
+
+Please follow the instructions below to access the feedback app:
 
 1. Open your web browser and go to https://interviewfeedback-iveggdcdruheskfdyzdtg9.streamlit.app/
 2. Log in using your assigned username and password.

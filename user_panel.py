@@ -4,7 +4,7 @@ from ui_feedback import show_feedback_form, show_feedback_tabs
 
 
 def select_candidate_main(candidates_dict):
-    st.header("Select candidate")
+    st.header("Select candidate", anchor=None)
     username = st.session_state.get("username")
     candidate_ids = list(candidates_dict.keys())
     options = []

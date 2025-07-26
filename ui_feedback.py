@@ -49,7 +49,7 @@ def show_feedback_form(candidate_id, candidate_choice, criteria, username):
     """
     candidate_id_str = str(candidate_id)
     # Show candidate name at the top of the panel without link symbol using st.header
-    st.header(f"Feedback for {candidate_choice}")
+    st.header(f"Feedback for {candidate_choice}", anchor=None)
     user_feedback = (
         st.session_state["feedback"].get(username, {}).get(candidate_id_str, {})
     )
@@ -187,13 +187,13 @@ def show_feedback_tabs(candidates, criteria, username):
     Display feedback tabs for all candidates that have been submitted by the user.
     Shows both the user's and other panelists' feedback for each candidate.
     """
-    st.header("View Candidate Feedback")
+    st.header("View Candidate Feedback", anchor=None)
 
     for cid_str, cname in candidates.items():
         user_feedback = st.session_state["feedback"].get(username, {}).get(cid_str, {})
         if get_feedback_status(user_feedback) == "submitted":
             with st.expander(f"Feedback for {cname}"):
-                st.subheader(f"Your Feedback for {cname}")
+                st.subheader(f"Your Feedback for {cname}", anchor=None)
                 if user_feedback:
                     st.write(
                         "**Overall Rating:**", user_feedback.get("overall_rating", "")
@@ -206,7 +206,7 @@ def show_feedback_tabs(candidates, criteria, username):
                         format_timestamp(user_feedback.get("timestamp", "")),
                     )
                     render_feedback_table(user_feedback, criteria, username)
-                st.subheader("Other Panelists' Feedback")
+                st.subheader("Other Panelists' Feedback", anchor=None)
                 other_feedback_found = False
                 for uname, fb in st.session_state["feedback"].items():
                     if (

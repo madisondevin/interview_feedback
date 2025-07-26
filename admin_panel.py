@@ -111,7 +111,7 @@ def show_admin_dashboard():
                 new_order += [c for c in cols if c not in new_order]
                 feedback_df = feedback_df[new_order]
         st.dataframe(feedback_df, use_container_width=True)
-        st.subheader("📤 Export to Excel")
+        st.subheader("📤 Export to Excel", anchor=None)
         try:
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:

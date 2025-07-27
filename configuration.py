@@ -12,6 +12,10 @@ COOKIE_EXPIRY_DAYS = 1  # Shorter expiry for security
 # Load secrets from Streamlit secrets
 COOKIE_KEY = st.secrets["COOKIE_KEY"]
 
+# Google sheet info
+# SHEET_NAME = "streamlit_interview_feedback"
+WORKSHEET_NAME = "Feedback"
+SHEET_KEY = "19w1h1fH7sOCkr6AgmYTKBuFfmSzYfAlcsi8vi9siHpQ"
 
 RATING_OPTIONS = [
     "I can't tell",

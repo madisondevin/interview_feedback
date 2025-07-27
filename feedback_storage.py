@@ -1,3 +1,12 @@
+# Google Sheets integration
+import streamlit as st
+import gspread
+from google.oauth2.service_account import Credentials
+import time
+from gspread.exceptions import APIError
+from configuration import WORKSHEET_NAME, SHEET_KEY
+
+
 def get_feedback_status(feedback_entry):
     """
     Returns one of: 'submitted', 'in_progress', 'not_started' for a feedback entry dict.
@@ -20,19 +29,6 @@ def get_feedback_status(feedback_entry):
     return "not_started"
 
 
-# Google Sheets integration
-import streamlit as st
-import gspread
-from google.oauth2.service_account import Credentials
-
-SHEET_NAME = "streamlit_interview_feedback"
-WORKSHEET_NAME = "Feedback"
-
-
-import time
-from gspread.exceptions import APIError
-
-
 def get_gsheet(max_retries=5, delay=2):
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
@@ -44,7 +40,8 @@ def get_gsheet(max_retries=5, delay=2):
     gc = gspread.authorize(creds)
     for attempt in range(max_retries):
         try:
-            sh = gc.open(SHEET_NAME)
+            sh = gc.open_by_key(SHEET_KEY)
+            # sh = gc.open(SHEET_NAME)
             worksheet = sh.worksheet(WORKSHEET_NAME)
             return worksheet
         except APIError as e:
